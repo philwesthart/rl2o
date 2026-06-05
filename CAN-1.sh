@@ -26,7 +26,7 @@ chown rlto:rlto /home/rlto/Desktop/Logs/$curr_date
 #run DAQ sampling script
 sudo /home/rlto/Desktop/Logs/Scripts/DAQ/venv/bin/python3 /home/rlto/Desktop/Logs/Scripts/DAQ/DAQ-1.py &
 #run processing script
-/home/rlto/Desktop/Logs/Scripts/process-1.sh
+/home/rlto/Desktop/Logs/Scripts/process-2.sh
 
 #check if it's a new day
 while [ "$(date +%F)" == "$START_DATE" ]; do
