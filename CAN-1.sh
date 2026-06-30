@@ -4,14 +4,13 @@
 
 #ctrl+c trigger
 cleanup() {
-	echo "Ctrl+C, running killsw-1..."
+	echo "\nCtrl+C, running killsw-1..."
 	/home/rlto/Desktop/Logs/Scripts/killsw-1.sh
 	exit 0
 }
 trap cleanup SIGINT
 
 cd "$(dirname "$0")" || exit 1
-START_DATE=$(date +%F)
 	
 #create a folder with today's date yyyy-mm-dd
 curr_date=$(date +%F)
@@ -26,10 +25,13 @@ chown rlto:rlto /home/rlto/Desktop/Logs/$curr_date
 #run DAQ sampling script
 sudo /home/rlto/Desktop/Logs/Scripts/DAQ/venv/bin/python3 /home/rlto/Desktop/Logs/Scripts/DAQ/DAQ-1.py &
 #run processing script
-/home/rlto/Desktop/Logs/Scripts/process-2.sh
+/home/rlto/Desktop/Logs/Scripts/process-3.sh &
+#run GNSS logger script
+sudo /home/rlto/Desktop/Logs/Scripts/venv/bin/python3 /home/rlto/Desktop/Logs/Scripts/GNSSLog.py &
+#sudo /home/rlto/Desktop/Logs/Scripts/venv/bin/python3 /home/rlto/Desktop/Logs/Scripts/MapLap.py &
 
 #check if it's a new day
-while [ "$(date +%F)" == "$START_DATE" ]; do
+while [ "$(date +%F)" == "$curr_date" ]; do
 	sleep 3600
 done
 

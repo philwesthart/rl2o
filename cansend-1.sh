@@ -17,25 +17,25 @@ send_request1() {
 }
 
 #(future) 100ms interval
-send_request2() {
-	while true; do
-		cansend can0 000FFFFE#CD7AA61140010000 #vehicle speed
-		sleep 0.5
-	done
-}
+#send_request2() {
+#	while true; do
+		#cansend can0 000FFFFE#CD7AA61140010000 #vehicle speed
+		#sleep 0.5
+#	done
+#}
 
 #(future) 50ms interval
 send_request3() {
 	while true; do
-		cansend can0 000FFFFE#CD7AA6129D010000 #boost pressure
-		sleep 0.05 #breather for data request
-		cansend can0 000FFFFE#CD7AA61034010000 #AFR
-		sleep 0.05 #breather for data request
+		#cansend can0 000FFFFE#CD7AA6129D010000 #boost pressure
+		#sleep 0.05 #breather for data request
+		#cansend can0 000FFFFE#CD7AA61034010000 #AFR
+		#sleep 0.05 #breather for data request
 		cansend can0 000FFFFE#CD7AA6100C010000 #brake position
-		sleep 0.5
+		sleep 0.1
 	done
 }
 
 send_request1 &
-send_request2 &
+#send_request2 &
 send_request3 &

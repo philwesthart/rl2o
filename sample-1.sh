@@ -4,7 +4,7 @@
 
 #Definitions
 SAMPLERATE=0.1  #Log/pause rate in seconds
-ROW_LIMIT=300000
+ROW_LIMIT=300000	#300k originally
 MAX_STORAGE=20 #GB
 MAX_STORAGE=$((MAX_STORAGE*1000*1000)) #KB
 

@@ -94,7 +94,7 @@ def stream_plot(CAN_path, DAQ_path, CAN_buffer_size, DAQ_buffer_size, update_rat
     for ax in axes_DAQ: ax.legend(loc='upper left')
     
     #y-axis ranges
-    ax1.set_ylim(0, 80)     #mph
+    ax1.set_ylim(0, 100)     #mph
     ax2.set_ylim(0, 6000)   #rpm
     ax3.set_ylim(1.5, 3.1)  #brake V
     ax4.set_ylim(0, 100)    #APP%

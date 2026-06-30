@@ -12,6 +12,8 @@ sudo pkill -f sample-1.sh
 sudo pkill -f cansend-1.sh
 sudo pkill -f process-2.sh
 sudo pkill -f DAQ-1.py
+sudo pkill -2 -f GNSSLog.py
+sudo pkill -f MapLap.py
 
 #move raw CAN files into subfolder
 TARGET="/home/rlto/Desktop/Logs/$(date +%F)/CAN"
