@@ -1,6 +1,16 @@
-<script src="dashboard.js" defer></script>
+<head>
+    <link rel="stylesheet" href="dashboard.css">
+    <script src="vendor/gauge.min.js"></script>
+    <script src="dashboard.js" defer></script>
+</head>
+<body>
+    <div id="overlay">
+        <canvas id="speedGauge"></canvas>
+        <div id="gear">N</div>
+        <div id="speed">0 mph</div>
+        <div id="rpm">0 rpm</div>
+        <label for="fuel">Fuel Level:</label>
+        <meter id="fuel" min="0" max="100" value="65">65%</meter>
+    </div>
 
-<div id="speed">0 mph</div>
-<div id="rpm">0 rpm</div>
-<label for="fuel">Fuel Level:</label>
-<meter id="fuel" min="0" max="100" value="65">65%</meter>
+</body>

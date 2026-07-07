@@ -30,6 +30,7 @@ def get_data():
     t = t+1
 
     telemetry["rpm"] = int(5000 + 2000*math.sin(t/10.0))
+    telemetry["mph"] = int(50 + 20*math.sin(t/10.0))
 
     return telemetry
 
