@@ -37,39 +37,47 @@ RUN apt-get update && apt-get install -y \
     python3-dev \
     python3-pip \
     python3-venv \
-    python3-opencv \
-    python3-numpy \
-    python3-serial \
-    python3-websockets \
     libgl1 \
     libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
+#
 # -----------------------------------------------------------------------------
 # Python packages
 # -----------------------------------------------------------------------------
-RUN pip3 install --break-system-packages \
-    fastapi \
-    uvicorn[standard] \
-    python-can \
-    cantools \
-    aiofiles \
-    jinja2 \
-    websockets \
-    pydantic \
-    pyyaml \
-    opencv-python \
-    opencv-contrib-python \
-    numpy \
-    pillow
+RUN python3 -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+RUN pip install --upgrade pip
+RUN pip3 install \
+   fastapi \
+   uvicorn[standard] \
+   python-can \
+   cantools \
+   aiofiles \
+   jinja2 \
+   websockets \
+   pydantic \
+   pyyaml \
+   opencv-python \
+   opencv-contrib-python \
+   pillow
+
+
+# -----------------------------------------------------------------------------
+# OBS
+# -----------------------------------------------------------------------------
+RUN add-apt-repository ppa:obsproject/obs-studio && \
+    apt update && \
+    apt install obs-studio -y
+
 
 # -----------------------------------------------------------------------------
 # Working directory
 # -----------------------------------------------------------------------------
 WORKDIR /app
 
-COPY . /app
+#COPY . /app
 
 EXPOSE 8000
 
-CMD ["uvicorn", "telemetry_server:app", "--host", "0.0.0.0", "--port", "8000"]
+#CMD ["uvicorn", "telemetry_server:app", "--host", "0.0.0.0", "--port", "8000"]
