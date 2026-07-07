@@ -1,5 +1,40 @@
 /* CSS Styling */
 .horizontal-container {
   display: flex;       /* Aligns items horizontally */
-  gap: 15px;           /* Adds space between the items */
+  gap: 5px;           /* Adds space between the items */
+  
+}
+
+.footer {
+   position:absolute;
+   bottom:0;
+   width:100%;
+}
+
+.telemetry-table-container {
+    background: rgba(0,0,0,0.45);
+    height: 100%;
+    border-radius: 8px;
+    display: inline-block;
+    font-family: Arial, sans-serif;
+    padding: 5px;
+}
+
+.telemetry-table {
+    border-collapse: collapse;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+
+.telemetry-table .label {
+    text-align: right;
+    color: #bbbbbb;
+}
+
+.telemetry-table .value {
+    text-align: left;
+    min-width: 80px;
+    color: white;
 }

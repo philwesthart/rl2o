@@ -7,18 +7,18 @@ app = FastAPI()
 # Initial data dictionary
 telemetry={
     "rpm": 1,
-    "speed": 0,
-    "brake": 0,
-    "acceleration": 0,
-    "gg" : 0,
-    "coolant_temp": 0,
-    "iat": 0,
-    "aat": 0,
-    "battery_volt":0,
-    "oil_temp":0,
-    "oil_press":0,
-    "afr":0,
-    "trans_temp":0
+    "speed": 1,
+    "brake": 1,
+    "acceleration": 1,
+    "gg" : 1,
+    "coolant_temp": 1,
+    "iat": 1,
+    "aat": 1,
+    "battery_volt":1,
+    "oil_temp":1,
+    "oil_press":1,
+    "afr":1,
+    "trans_temp":1
 }
 t=0
 
