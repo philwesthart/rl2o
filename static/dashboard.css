@@ -1,0 +1,5 @@
+/* CSS Styling */
+.horizontal-container {
+  display: flex;       /* Aligns items horizontally */
+  gap: 15px;           /* Adds space between the items */
+}

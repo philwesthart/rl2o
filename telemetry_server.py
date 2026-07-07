@@ -20,7 +20,6 @@ telemetry={
     "afr":0,
     "trans_temp":0
 }
-
 t=0
 
 @app.get("/telemetry")
@@ -29,6 +28,7 @@ def get_data():
     global t
     t = t+1
 
+    # TODO replace with CAN queries
     telemetry["rpm"] = int(5000 + 2000*math.sin(t/10.0))
     telemetry["mph"] = int(50 + 20*math.sin(t/10.0))
 

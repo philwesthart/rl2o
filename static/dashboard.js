@@ -9,13 +9,49 @@ setInterval(async () => {
     rpm.innerText =
         `${t.rpm} rpm`;
 
-    speedGauge.value = t.mph
+    rpmGauge.value = t.rpm
+    mphGauge.value = t.mph
 }, 100);
 
-const speedGauge = new RadialGauge({
-    renderTo: 'speedGauge',
-    width: 300,
-    height: 300,
+const rpmGauge = new RadialGauge({
+    renderTo: 'rpmGauge',
+    width: 150,
+    height: 150,
+    units: "RPM",
+    minValue: 0,
+    maxValue: 10000,
+    majorTicks: [
+        "0","2000","4000","6000",
+        "8000","10000"
+    ],
+    minorTicks: 4,
+    strokeTicks: true,
+    value: 0,
+    highlights: [
+        {
+            from:0,
+            to:8000,
+            color:"rgba(0,255,0,.2)"
+        },
+        {
+            from:100,
+            to:160,
+            color:"rgba(255,0,0,.4)"
+        }
+    ],
+    colorPlate:"#00000000",
+    colorNeedle:"#ff3333",
+    colorNumbers:"#ffffff",
+    colorUnits:"#ffffff",
+    colorTitle:"#ffffff",
+    animationDuration:150,
+    animationRule:"linear"
+}).draw();
+
+const mphGauge = new RadialGauge({
+    renderTo: 'mphGauge',
+    width: 150,
+    height: 150,
     units: "MPH",
     minValue: 0,
     maxValue: 160,
@@ -50,7 +86,5 @@ const speedGauge = new RadialGauge({
     colorUnits:"#ffffff",
     colorTitle:"#ffffff",
     animationDuration:150,
-
     animationRule:"linear"
-
 }).draw();
