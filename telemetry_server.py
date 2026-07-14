@@ -29,13 +29,13 @@ def init():
 def get_gnss_data():
     # Call your gnss library
     gnss_data = {
-        "gnss_lat" : 0,
-        "gnss_long" : 0
+        "lat" : 0,
+        "long" : 0
     }
 
     # TODO replace with library call
-    gnss_data["gnss_lat"] = 33.23
-    gnss_data["gnss_long"] = 42.432
+    gnss_data["lat"] = 33.23
+    gnss_data["long"] = 42.432
 
     return gnss_data
 
@@ -58,7 +58,7 @@ def get_data():
     telemetry["mph"] = int(50 + 20*math.sin(t/10.0))
 
     gnss_data = get_gnss_data()
-    telemetry["gnss_lat"] = gnss_data.lat
+    telemetry["lat"] = gnss_data.lat
 
     can_bus_data = get_can_bus_data()
     telemetry["TBD"] = can_bus_data.lat
