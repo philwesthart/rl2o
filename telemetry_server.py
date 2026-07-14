@@ -61,7 +61,6 @@ def get_data():
     telemetry["lat"] = gnss_data["lat"]
 
     can_bus_data = get_can_bus_data()
-    telemetry["TBD"] = can_bus_data.lat
 
     return telemetry
 
