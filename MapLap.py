@@ -373,7 +373,7 @@ def main():
                     f"Lap: {lap_count}\n"
                     f"Curr: {current_lap_elapsed:.2f} s\n"
                     f"Delta: {current_delta_text} s\n"
-                    f"Last: {last_lap_time:.2f} s\n"
+                    f"Last: {last_lap_time} s\n"
                     f"Target: {target_lap_text} s"
                 )
                 telemetry_text.set_text(debug_string)

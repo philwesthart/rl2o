@@ -9,7 +9,7 @@ telemetry={
     "rpm": 1,
     "speed": 1,
     "brake": 1,
-    "acceleration": 1,
+    "app": 1,   #previously "acceleration"
     "gg" : 1,
     "coolant_temp": 1,
     "iat": 1,
@@ -18,7 +18,8 @@ telemetry={
     "oil_temp":1,
     "oil_press":1,
     "afr":1,
-    "trans_temp":1
+    "trans_temp":1,
+    "boost":1   #added
 }
 t=0
 

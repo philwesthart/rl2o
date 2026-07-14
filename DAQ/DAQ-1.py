@@ -133,7 +133,7 @@ try:
                     #CHANNEL 3: AFR
                     afrV = 5 * (ch3_counts / 32768) #raw voltage
                     #print(f"3 AFR V: {afrV}")
-                    afr = (afrV * 2) + 10
+                    afr = (afrV * 2) + 10 -0.2  #6/12/2026 idle shows consistent 0.2 higher than gauge
                     afr = max(10.0, min(20.0, afr)) #floor/ceiling
                         
                     #CHANNEL 4: TRANSMISSION TEMP
