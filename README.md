@@ -74,3 +74,10 @@ sudo journalctl --vacuum-time=3d
 # Limit logs to 200MB
 sudo journalctl --vacuum-size=200M
 ```
+
+
+
+
+
+# Starting server
+uvicorn telemetry_server:app
