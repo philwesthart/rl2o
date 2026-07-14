@@ -30,7 +30,7 @@ setInterval(async () => {
     document.getElementById("transTemp").innerHTML =
         `${t.trans_temp.toFixed(0)} °F`;
 
-}, 100);
+}, 10);
 
 
 const rpmGauge = new RadialGauge({
