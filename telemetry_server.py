@@ -58,7 +58,7 @@ def get_data():
     telemetry["mph"] = int(50 + 20*math.sin(t/10.0))
 
     gnss_data = get_gnss_data()
-    telemetry["lat"] = gnss_data.lat
+    telemetry["lat"] = gnss_data["lat"]
 
     can_bus_data = get_can_bus_data()
     telemetry["TBD"] = can_bus_data.lat
