@@ -1,38 +1,3 @@
-setInterval(async () => {
-    const t =
-        await fetch("/telemetry")
-        .then(r => r.json());
-
-    rpmGauge.value = t.rpm
-    mphGauge.value = t.mph
-
-        document.getElementById("coolantTemp").innerHTML =
-        `${t.coolant_temp.toFixed(0)} °F`;
-
-    document.getElementById("iat").innerHTML =
-        `${t.iat.toFixed(0)} °F`;
-
-    document.getElementById("aat").innerHTML =
-        `${t.aat.toFixed(0)} °F`;
-
-    document.getElementById("batteryVoltage").innerHTML =
-        `${t.battery_volt.toFixed(1)} V`;
-
-    document.getElementById("oilTemp").innerHTML =
-        `${t.oil_temp.toFixed(0)} °F`;
-
-    document.getElementById("oilPressure").innerHTML =
-        `${t.oil_press.toFixed(0)} PSI`;
-
-    document.getElementById("afr").innerHTML =
-        `${t.afr.toFixed(1)}`;
-
-    document.getElementById("transTemp").innerHTML =
-        `${t.trans_temp.toFixed(0)} °F`;
-
-}, 10);
-
-
 const rpmGauge = new RadialGauge({
     renderTo: 'rpmGauge',
     width: 150,
@@ -67,7 +32,6 @@ const rpmGauge = new RadialGauge({
     animationDuration:15,
     animationRule:"linear"
 }).draw();
-
 
 const mphGauge = new RadialGauge({
     renderTo: 'mphGauge',
@@ -147,7 +111,7 @@ const accGauge = new LinearGauge({
     minValue: 0,
     maxValue: 1,
     value: 0,
-    units: "BRK",
+    units: "THR",
     orientation: "vertical",
     // Fill direction
     barBeginCircle: false,
@@ -169,3 +133,44 @@ const accGauge = new LinearGauge({
     animationDuration: 150,
     animationRule: "linear"
 }).draw();
+
+function safeFixed(val, decimals = 0) {
+    // formats numbers if null/undefined
+    return (val !== undefined && val !== null && !isNaN(val)) ? Number(val).toFixed(decimals) : "0";
+}
+
+const elements = {
+    coolantTemp: document.getElementById("coolantTemp"),
+    iat: document.getElementById("iat"),
+    aat: document.getElementById("aat"),
+    batteryVoltage: document.getElementById("batteryVoltage"),
+    oilTemp: document.getElementById("oilTemp"),
+    oilPressure: document.getElementById("oilPressure"),
+    afr: document.getElementById("afr"),
+    transTemp: document.getElementById("transTemp")
+};
+
+setInterval(async () => {
+    try {
+        const res = await fetch("http://127.0.0.1:8000/telemetry");
+        //const res = await fetch("/telemetry");
+        if (!res.ok) return;
+        const t = await res.json();
+        if(!t) return;
+        
+        if (t.RPM !== undefined) rpmGauge.value = t.RPM;
+        if (t.MPH !== undefined) mphGauge.value = t.MPH;
+        if (t.brake !== undefined) brakeGauge.value = t.brake;
+        if (t.throttle !== undefined) accGauge.value = t.throttle;
+        if (elements.coolantTemp) elements.coolantTemp.textContent = `${safeFixed(t.coolant_temp, 0)} °C`;
+        if (elements.iat) elements.iat.textContent = `${safeFixed(t.IAT, 0)} °C`;
+        if (elements.aat) elements.aat.textContent = `${safeFixed(t.AAT, 0)} °C`;
+        if (elements.batteryVoltage) elements.batteryVoltage.textContent = `${safeFixed(t.Battery_V, 1)} V`;
+        if (elements.oilTemp) elements.oilTemp.textContent = `${safeFixed(t.oil_temp, 0)} °C`;
+        if (elements.oilPressure) elements.oilPressure.textContent = `${safeFixed(t.oil_press, 0)} PSI`;
+        if (elements.afr) elements.afr.textContent = `${safeFixed(t.AFR, 1)}`;
+        if (elements.transTemp) elements.transTemp.textContent = `${safeFixed(t.trans_temp, 0)} °C`;
+    } catch (err) {
+        console.warn("[Dashboard] Fetch failed:", err);
+    }
+}, 100);

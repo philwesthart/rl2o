@@ -9,10 +9,8 @@ import asyncio
 import logging
 import struct
 import os
-import sys
 import sqlite3
 import socket
-import subprocess
 from bleak import BleakScanner, BleakClient
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -21,13 +19,12 @@ from zoneinfo import ZoneInfo
 #filesize limiting
 ROW_LIMIT = 300000
 current_row_count = 0
-RB_MAC = "C1:57:6B:6E:DB:82"
 
 #retry for lost BLE connection
 MAX_RETRIES = 5
 
 #Raw logging directory, filenames
-TARGET_FOLDER = os.path.join("/home/rlto/Desktop/Logs", datetime.now().strftime("%Y-%m-%d"), "GNSS")
+TARGET_FOLDER = os.path.join(".", datetime.now().strftime("%Y-%m-%d"), "GNSS")
 os.makedirs(TARGET_FOLDER, exist_ok=True)
 RAW_LOG_FILE = os.path.join(TARGET_FOLDER, f"({datetime.now().strftime('%H-%M-%S')}) GNSS_raw.txt")
 
@@ -53,20 +50,6 @@ TX_CHAR_UUID      = "6E400003-B5A3-F393-E0A9-E50E24DCCA9E"
 #Message frame start and data class ID
 FRAME_START = b"\xB5\x62"
 DATA_CLASS_ID = b"\xFF\x01" 
-
-
-
-#############CHECK IF RB ALREADY CONNECTED---------------------------------
-def is_RB_already_connected():
-    try:
-        cmd = f"bluetoothctl info {RB_MAC}"
-        result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=2)
-        if "Connected: yes" in result.stdout:
-            return True
-    except Exception:
-        pass
-    return False
-
 
 
 
@@ -271,11 +254,6 @@ def parse_data_message(payload: bytes):
 
 #####################------------------------------------
 async def main():
-    if is_RB_already_connected():
-        logger.warning("RB already connected, cleaning-up")
-        subprocess.run(["bluetoothctl", "disconnect", RB_MAC], capture_output=True)
-        await asyncio.sleep(1)
-        
     connection_dropped = asyncio.Event()   #flags if loss of comm
 
     def disconnect_handler(client):
@@ -295,8 +273,8 @@ async def main():
                     target_device = device
                     logger.info(f"Found target device: {device.name} [{device.address}]")
                     break
-            if target_device:
-                break
+                if target_device:
+                    break
             if attempt < MAX_RETRIES:
                 logger.warning("Device not found, retrying scan...")
                 await asyncio.sleep(1)  #brief pause
@@ -314,28 +292,27 @@ async def main():
                     print("Initializing SQL DB...")
                     init_database()
             
-                    #logger.info("Subscribing to TX Characteristic data stream...")
+                    logger.info("Subscribing to TX Characteristic data stream...")
                     await client.start_notify(TX_CHAR_UUID, notification_handler)
                     logger.info("Stream initialized. Press Ctrl+C to stop logging.")
                     #Keep the script running to absorb the continuous stream
+                    while not connection_dropped.is_set():
+                        await asyncio.sleep(1)
+                    logger.info("Stopping notifications and disconnecting...")
                     try:
-                        while not connection_dropped.is_set():
-                            await asyncio.sleep(1)
-                    except Exception as e:
-                        logger.error(f"loop error: {e}")
+                        await client.stop_notify(TX_CHAR_UUID)
+                    except Exception:
+                        pass
         except (asyncio.CancelledError, KeyboardInterrupt):
+            logger.info("Shutdown requested by user.")
             break
-                        
         except Exception as e:            
             logger.error("Connection error: {e}. Attempting recovery...")
             await asyncio.sleep(3)
-            logger.info("Retrying...")
+        logger.info("Retrying...")
 
 if __name__ == "__main__":
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        subprocess.run(["bluetoothctl", "disconnect", RB_MAC], capture_output=True)    #Racebox Micro MAC address
-        print("\nRB HW link severed")
-        sys.exit(0)
-
+        logger.info("Script terminated by user.")

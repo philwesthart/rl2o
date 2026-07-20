@@ -8,8 +8,7 @@
 #4) Tracks best lap time
 #5) Total current driver elapsed time (resetable)
 #6) Total current laps current driver (resetable)
-#7) Total current laps (all drivers) (separate reset)
-#8) GG graph
+#7) GG graph
 
 import yaml
 import socket
@@ -22,6 +21,8 @@ from pyproj import Proj, Transformer
 from pathlib import Path
 from matplotlib.markers import MarkerStyle
 from datetime import datetime
+import sqlite3
+import numpy as np
 
 ##########SETUPS--------------------
 trackdat = "Shadycrest.yml" #track map to load
@@ -29,6 +30,23 @@ track_img_name = "Shadycrest.png"   #image of track map
 target_lap_time = None  #if using best, set to None
 
 
+#SQL DB
+date_str = datetime.now().strftime("%Y-%m-%d")
+Path(f"{date_str}/GNSS").mkdir(parents=True, exist_ok=True)
+conn = sqlite3.connect(f"{date_str}/GNSS/telemetry_log.db")
+cursor = conn.cursor()
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS Laps (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    date_time TEXT DEFAULT (datetime('now', 'localtime')),
+    lap_number INTEGER,
+    lap_time REAL
+)
+""")
+conn.commit()
+
+#Initialize total elapsed time stopwatch
+session_start_itow = None
 
 
 ######Load track map file---------------------------
@@ -69,7 +87,9 @@ def universal_exit_handler(signum, frame):
     
 ###################Main---------------------------------
 def main():
-    global target_lap_time
+    global target_lap_time, session_start_itow
+
+    total_elapsed_time_str = "00:00:00"
 
     #intercept Ctrl+C at OS level
     signal.signal(signal.SIGINT, universal_exit_handler)
@@ -176,7 +196,27 @@ def main():
             linewidth=1,
             zorder=4
         )
-    
+    #GG meter in the top-right
+    ax_gg = fig.add_axes([0.75, 0.75, 0.2, 0.2])    #location of GG meter
+    ax_gg.set_aspect('equal')   #circle
+    ax_gg.set_facecolor('black')    #background
+    ax_gg.set_xlim(-2.1, 2.1)   #2G w/ small buffer
+    ax_gg.set_ylim(-2.1, 2.1)
+    ax_gg.get_xaxis().set_visible(False)
+    ax_gg.get_yaxis().set_visible(False)
+    for spine in ax_gg.spines.values():
+        spine.set_color('#333333')  #gray border
+    theta = np.linspace(0, 2*np.pi, 100)
+    circle_1g_x = np.cos(theta) #1G ring
+    circle_1g_y = np.sin(theta) #1G ring
+    ax_gg.plot(circle_1g_x, circle_1g_y, color='#555555', linestyle='--', linewidth=1, label='1G')   #<<<<<<<<<<<<
+    circle_2g_x = 2*np.cos(theta)   #2G ring
+    circle_2g_y = 2*np.sin(theta)   #2G ring
+    ax_gg.plot(circle_2g_x, circle_2g_y, color='#AAAAAA', linestyle='-', linewidth=1.5, label='2G')  #<<<<<<<<<<<<<<
+    ax_gg.axhline(0, color='#333333', linewidth=1)    #crosshair
+    ax_gg.axvline(0, color='#333333', linewidth=1)    #crosshair
+    ax_gg.text(1.1, -0.3, "1G", color='#AAAAAA', fontsize=7, alpha=0.7, transform=ax_gg.transData)   #1G label
+    ax_gg.text(-1.9, -0.3, "2G", color='#AAAAAA', fontsize=7, alpha=0.7, transform=ax_gg.transData) #2G label
 
 
     #Configure UDP port
@@ -201,35 +241,51 @@ def main():
             markerfacecolor='cyan',
             markeredgewidth=1.5,
             markersize=15,
-            zorder=5
+            zorder=5,
+            animated=True
         )
 
+        #GG marker setup
+        gg_history_handle, = ax_gg.plot([], [], color='white', marker='o', markersize=6, alpha=0.2, animated=True)   #trail
+        gg_marker_handle, =ax_gg.plot([], [], color='red', marker='o', markersize=8, animated=True)    #current position<<<<<<<
+        gg_history_list = []
+        MAX_GG_HISTORY_POINTS = 20    #adjustment for tail length<<<<<
 
-        #Debug text box setup
+
+        #Text box setup
         telemetry_text = ax.text(
-            0.98, 0.02, "", #bottom RH
+            0.98, 0.08, "", #bottom RH
             transform=ax.transAxes,
             fontsize=8,
             fontfamily='monospace', #keeps vertical number alignment
             verticalalignment='bottom',
             horizontalalignment='right',
             zorder=6,
+            animated=True,
             bbox=dict(boxstyle='round', pad=0.5, facecolor='black', alpha=0.7, edgecolor='none')
         )
+        delta_text = ax.text(
+            0.98, 0.02, "",
+            transform=ax.transAxes,
+            fontsize=8,
+            fontfamily='monospace',
+            verticalalignment='bottom',
+            horizontalalignment='right',
+            animated=True,
+            bbox=dict(boxstyle='round', pad=0.5, facecolor='black', alpha=0.7, edgecolor='none'))
 
         plt.show(block=False)
-
         #BLIT initial and cache
         fig.canvas.draw()
-        bg_cache = fig.canvas.copy_from_bbox(ax.bbox)
+        bg_cache = fig.canvas.copy_from_bbox(fig.bbox)
 
 
         #Laptiming variables
         prev_pos = None
         lap_start_itow = None
         lap_count = 0
-        last_lap_time = 0.000
-        current_lap_elapsed = 0.0
+        last_lap_time = "0.00"
+        current_lap_elapsed = 0.00
         if target_lap_time == None:  #if best lap times should be used
             target_lap_time = float('inf')
             best_lap_marker = 1
@@ -245,14 +301,6 @@ def main():
         
         while True:
             data_bytes, addr = sock.recvfrom(1024)  #1024by is overkill
-            
-            #due to lag issues, below is to empty backlog of old packets which queue-up
-            while True:
-                try:
-                    data_bytes, _ = sock.recvfrom(1024, socket.MSG_DONTWAIT)
-                except (BlockingIOError, OSError):
-                    break   #buffer empty
-                
             try:
                 #Decode incoming GNSS
                 payload = data_bytes.decode('utf-8').strip()
@@ -315,9 +363,9 @@ def main():
                                     if target_sector_times[i] != float('inf'):
                                         delta_TTS = current_lap_elapsed - target_sector_times[i]
                                         current_delta_text = f"{delta_TTS:+.2f}"
-                                        print(f" Crossed {sector['name']} | Delta: {current_delta_text}") #debug
+                                        #print(f" Crossed {sector['name']} | Delta: {current_delta_text}") #debug
                                     else:
-                                        current_delta_text = "- "
+                                        current_delta_text = " "
 
 
                                         
@@ -328,11 +376,23 @@ def main():
                             lap_start_itow = itow
                             lap_count = 0
                             this_lap_sector_times = [0.0] * num_sectors #temp variable to log current lap sectors
-
                         #if a subsequent lap
                         else:
                             lap_duration = (itow - lap_start_itow) / 1000
-                            last_lap_time = f"{lap_duration:.3f}"                            
+                            last_lap_time = f"{lap_duration:.2f}"
+                            if target_lap_time != float('inf'): #if pass SF calculate delta
+                                final_delta = lap_duration - target_lap_time
+                                current_delta_text = f"{final_delta:+.2f}"
+                            else:
+                                current_delta_text = "- "
+                            try:    #log to SQL
+                                cursor.execute(
+                                    "INSERT INTO Laps (lap_number, lap_time) VALUES (?, ?)",
+                                    (lap_count + 1, round(lap_duration, 2))
+                                )
+                                conn.commit()
+                            except Exception as e:
+                                print(f"DB logging error: {e}")
                             if lap_duration < target_lap_time:
                                 if best_lap_marker == 1: #if =1 than best =target, if =0 then target stays
                                     target_lap_time = lap_duration
@@ -340,7 +400,7 @@ def main():
                                 else: #if chasing target times instead...
                                     pass
                             
-                            print(f"Lap completed: {lap_count}, {last_lap_time}s | Target: {target_lap_time:.3f}s")
+                            print(f"Lap completed: {lap_count}, {last_lap_time}s | Target: {target_lap_time:.2f}s | Delta: {current_delta_text}s")
                             lap_count += 1
                             lap_start_itow = itow   #reset new anchor mark
                             this_lap_sector_times = [0.0] * num_sectors #reset curr lap sector timings
@@ -353,39 +413,64 @@ def main():
                             if not sector_crossed[i]:
                                 this_lap_sector_times[i] = current_lap_elapsed  #record split time for sector
                     else:
-                        current_lap_elapsed = 0.000
+                        current_lap_elapsed = 0.00
                 prev_pos = current_pos
                 #display best and current
-                target_lap_text = f"{target_lap_time:.2f}" if target_lap_time != float('inf') else "0.000s"
+                target_lap_text = f"{target_lap_time:.2f}" if target_lap_time != float('inf') else "0.00"
+                #Determine total elapsed time
+                if session_start_itow is None:
+                    session_start_itow = itow
+                elapsed_ms = itow - session_start_itow
+                total_elapsed_time_str = f"{int(elapsed_ms/1000//3600):02d}:{int(elapsed_ms/1000%3600//60):02d}:{int(elapsed_ms/1000%60):02d}"
     
 
 
                 
 
-                #DEBUG textbox on plot
+                #Textbox on plot
                 debug_string = (
                     f"GNSS: {timestamp2}\n"
                     f"Bee: {local_time}\n"
                     f"Sats: {num_sat}\n"
+                    f"Since reset: {total_elapsed_time_str}\n"
                     #f"H-Acc: {float(horizontal_accuracy):.2f}m\n"
                     #f"Hdg-Acc: {float(heading_accuracy):.1f}*\n"
                     f"\n"
-                    f"Lap: {lap_count}\n"
+                    f"Laps complete: {lap_count}\n"
                     f"Curr: {current_lap_elapsed:.2f} s\n"
-                    f"Delta: {current_delta_text} s\n"
                     f"Last: {last_lap_time} s\n"
-                    f"Target: {target_lap_text} s"
+                    f"Best: {target_lap_text} s"
                 )
                 telemetry_text.set_text(debug_string)
                 telemetry_text.set_color('white')
+                #dynamic Delta text color
+                if current_delta_text.startswith('+'):
+                    text_color = 'red'
+                elif current_delta_text.startswith('-'):
+                    text_color = 'green'
+                else:
+                    text_color = 'white'
+                delta_text.set_text(f"Delta: {current_delta_text} s")
+                delta_text.set_color(text_color)
 
-
+                #update GG
+                gg_history_list.append((gx, gy))    #append to tail
+                while len(gg_history_list) > MAX_GG_HISTORY_POINTS: #append tail
+                    gg_history_list.pop(0)
+                if gg_history_list:
+                    hist_x, hist_y = zip(*gg_history_list)  #breakdown into x and y
+                    gg_history_handle.set_data(hist_x, hist_y)
+                gg_marker_handle.set_data([gx], [gy])   #set current marker
+                
 
                 #BLIT
                 fig.canvas.restore_region(bg_cache)
+                ax_gg.draw_artist(gg_history_handle)
+                ax_gg.draw_artist(gg_marker_handle)
                 ax.draw_artist(vehicle_pointer)
                 ax.draw_artist(telemetry_text)
-                fig.canvas.blit(ax.bbox)
+                ax.draw_artist(delta_text)
+                fig.canvas.blit(fig.bbox)
                 fig.canvas.flush_events()
                 
             except ValueError as ve:
