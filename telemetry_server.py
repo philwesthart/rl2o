@@ -58,6 +58,7 @@ telemetry={
     "AFR": None,
     "trans_temp": None,
     "boost": None,
+    "vac": None,
     "lat": None,
     "long": None,
     "sats": None,
@@ -747,6 +748,8 @@ def get_data():
         telemetry["throttle"] = ((t+5)%10)/10.0 
         telemetry["RPM"] = int(5000 + 2000*math.sin(t/10.0))
         telemetry["MPH"] = int(50 + 20*math.sin(t/10.0))
+        telemetry["boost"] = int(15*math.sin(t/10.0))
+        telemetry["vac"] = int(10*math.sin(t/10.0))
 
     #return telemetry
     with telemetry_lock:

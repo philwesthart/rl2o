@@ -1,7 +1,9 @@
+const widgetHeight = 150
+
 const rpmGauge = new RadialGauge({
     renderTo: 'rpmGauge',
-    width: 150,
-    height: 150,
+    width: widgetHeight,
+    height: widgetHeight,
     units: "RPM",
     minValue: 0,
     maxValue: 10000,
@@ -152,6 +154,31 @@ const elements = {
     transTemp: document.getElementById("transTemp")
 };
 
+
+function updateBoost(boostPsi, vacuumInHg)
+{
+    const positive =
+        document.getElementById("boostPositive");
+    const negative =
+        document.getElementById("boostNegative");
+    if(boostPsi >= 0)
+    {
+        positive.style.height =
+            (boostPsi/20.0)*96 + "px";
+        negative.style.height = "0px";
+        boostValue.innerHTML =
+            boostPsi.toFixed(1) + " PSI";
+    }
+    else
+    {
+        negative.style.height =
+            (Math.abs(vacuumInHg)/30.0)*144 + "px";
+        positive.style.height = "0px";
+        boostValue.innerHTML =
+            vacuumInHg.toFixed(1) + " inHg";
+    }
+}
+
 setInterval(async () => {
     try {
         const res = await fetch("http://127.0.0.1:8000/telemetry");
@@ -172,6 +199,11 @@ setInterval(async () => {
         if (elements.oilPressure) elements.oilPressure.textContent = `${safeFixed(t.oil_press, 0)} PSI`;
         if (elements.afr) elements.afr.textContent = `${safeFixed(t.AFR, 1)}`;
         if (elements.transTemp) elements.transTemp.textContent = `${safeFixed(t.trans_temp, 0)} °C`;
+        if (elements.transTemp) elements.transTemp.textContent = `${safeFixed(t.trans_temp, 0)} °C`;
+
+        if (t.boost !== undefined) boost = t.boost;
+        if (t.vac !== undefined) vac = t.vac;
+        updateBoost(boost, vac);
     } catch (err) {
         console.warn("[Dashboard] Fetch failed:", err);
     }

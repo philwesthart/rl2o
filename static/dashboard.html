@@ -2,6 +2,9 @@
     <link rel="stylesheet" href="dashboard.css">
     <script src="vendor/gauge.min.js"></script>
     <script src="dashboard.js" defer></script>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
 </head>
 <body>
     <div id="overlay" class="horizontal-container footer">
@@ -9,6 +12,18 @@
         <canvas id="mphGauge"></canvas>
         <canvas id="brakeGauge"></canvas>
         <canvas id="accGauge"></canvas>
+
+        <div class="boost-container">
+            <div class="boost-label">Boost</div>
+            <div class="boost-scale">
+                <div id="boostPositive" class="boost-positive"></div>
+                <div class="boost-zero"></div>
+                <div id="boostNegative" class="boost-negative"></div>
+            </div>
+            <div id="boostValue" class="boost-value">
+                0 PSI
+            </div>
+        </div>
 
         <div class="telemetry-table-container">
             <table class="telemetry-table">
