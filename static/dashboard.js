@@ -30,7 +30,8 @@ const rpmGauge = new RadialGauge({
     colorUnits:"#ffffff",
     colorTitle:"#ffffff",
     animationDuration:15,
-    animationRule:"linear"
+    animationRule:"linear",
+    valueDec:0
 }).draw();
 
 const mphGauge = new RadialGauge({
@@ -52,17 +53,17 @@ const mphGauge = new RadialGauge({
         {
             from:0,
             to:60,
-            color:"rgba(0,255,0,.2)"
+            color:"rgba(0,255,0,.0)"
         },
         {
             from:60,
             to:100,
-            color:"rgba(255,255,0,.3)"
+            color:"rgba(255,255,0,.0)"
         },
         {
             from:100,
             to:160,
-            color:"rgba(255,0,0,.4)"
+            color:"rgba(255,0,0,.0)"
         }
     ],
     colorPlate:"#00000000",
@@ -71,7 +72,8 @@ const mphGauge = new RadialGauge({
     colorUnits:"#ffffff",
     colorTitle:"#ffffff",
     animationDuration:150,
-    animationRule:"linear"
+    animationRule:"linear",
+    valueDec:0
 }).draw();
 
 const brakeGauge = new LinearGauge({

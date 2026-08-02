@@ -737,13 +737,21 @@ app.add_middleware(
 
 @app.get("/telemetry")
 def get_data():
-    #global telemetry
+    global telemetry
     global t
     t = t+1
+
+    # Run using "USE_SIM=true ./start_server.py" to get here
+    if os.getenv("USE_SIM"):
+        telemetry["brake"] = (t%10)/10.0 
+        telemetry["throttle"] = ((t+5)%10)/10.0 
+        telemetry["RPM"] = int(5000 + 2000*math.sin(t/10.0))
+        telemetry["MPH"] = int(50 + 20*math.sin(t/10.0))
 
     #return telemetry
     with telemetry_lock:
         return dict(telemetry)
+        
 
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
